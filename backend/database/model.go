@@ -1,5 +1,14 @@
 package database
 
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
+)
+
 type User struct {
 	// ID 使用者 ID
 	ID string `json:"userId" gorm:"primaryKey"`
@@ -16,4 +25,63 @@ type User struct {
 
 func (*User) TableName() string {
 	return "user"
+}
+
+func (u *User) WebAuthnID() []byte {
+	return []byte(u.ID)
+}
+
+func (u *User) WebAuthnName() string {
+	return u.ID
+}
+
+func (u *User) WebAuthnDisplayName() string {
+	return u.DisplayName
+}
+
+func (u *User) WebAuthnCredentials() []webauthn.Credential {
+	credentials := []webauthn.Credential{}
+
+	allUser, err := GetUsers()
+	if err != nil {
+		fmt.Println(err.Error())
+		return credentials
+	}
+
+	for _, user := range allUser {
+		s, err := strconv.Unquote(string(user.Credential))
+		if err != nil {
+			fmt.Println(err.Error())
+			return credentials
+		}
+		var credsMap map[string]interface{}
+		err = json.Unmarshal([]byte(s), &credsMap)
+		if err != nil {
+			fmt.Println(err.Error())
+			return credentials
+		}
+		credsJson, err := json.Marshal(credsMap)
+		if err != nil {
+			fmt.Println(err.Error())
+			return credentials
+		}
+		var cred webauthn.Credential
+		err = json.Unmarshal(credsJson, &cred)
+		if err != nil {
+			fmt.Println(err.Error())
+			return credentials
+		}
+		credentials = append(credentials, cred)
+	}
+
+	return credentials
+}
+
+func (u *User) CredentialExcludeList() []protocol.CredentialDescriptor {
+	var credentialExcludeList []protocol.CredentialDescriptor
+	for _, credential := range u.WebAuthnCredentials() {
+		descriptor := credential.Descriptor()
+		credentialExcludeList = append(credentialExcludeList, descriptor)
+	}
+	return credentialExcludeList
 }

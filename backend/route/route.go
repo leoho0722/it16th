@@ -1,8 +1,11 @@
 package route
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 
+	"leoho.io/it16th-webauthn-rp-server/config"
 	"leoho.io/it16th-webauthn-rp-server/controller"
 )
 
@@ -21,5 +24,7 @@ func NewRoute() {
 		assertion.POST("/result", controller.FinishAssertionHandler)
 	}
 
-	app.Run("0.0.0.0:8080")
+	serverConfig := config.GetServerConfiguration()
+	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
+	app.Run(addr)
 }
