@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -49,6 +50,10 @@ func (u *User) WebAuthnCredentials() []webauthn.Credential {
 	}
 
 	for _, user := range allUser {
+		if !strings.HasPrefix(user.Credential, "`") || user.Credential == "`{}`" {
+			continue
+		}
+
 		s, err := strconv.Unquote(string(user.Credential))
 		if err != nil {
 			fmt.Println(err.Error())
