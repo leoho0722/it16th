@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	goWebAuthn "github.com/go-webauthn/webauthn/webauthn"
+	"github.com/google/uuid"
 
 	"leoho.io/it16th-webauthn-rp-server/api"
 	"leoho.io/it16th-webauthn-rp-server/database"
@@ -37,7 +38,8 @@ func StartAttestationHandler(ctx *gin.Context) {
 	fmt.Println("Request body: ", reqBody)
 
 	user := &database.User{
-		ID:          request.Username,
+		ID:          uuid.New().String(),
+		Name:        request.Username,
 		DisplayName: request.DisplayName,
 	}
 	registrationOptions := func(credCreationOpts *protocol.PublicKeyCredentialCreationOptions) {

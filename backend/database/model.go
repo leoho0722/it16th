@@ -14,6 +14,9 @@ type User struct {
 	// ID 使用者 ID
 	ID string `json:"userId" gorm:"primaryKey"`
 
+	// Name 使用者名稱
+	Name string `json:"name"`
+
 	// DisplayName 使用者的顯示名稱
 	DisplayName string `json:"displayName"`
 
