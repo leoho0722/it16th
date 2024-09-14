@@ -2,7 +2,7 @@ server:
   host: "0.0.0.0"
   port: 8080
 webauthn:
-  id: "it16th-webauthn-rp-server"
+  id: "0a9c-2001-b011-2015-1886-24ec-4ea0-b6e4-1aea.ngrok-free.app"
   displayName: "it16th-webauthn-rp-server"
   origin: "https://0a9c-2001-b011-2015-1886-24ec-4ea0-b6e4-1aea.ngrok-free.app"
 database:
