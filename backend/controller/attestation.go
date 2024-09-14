@@ -42,10 +42,8 @@ func StartAttestationHandler(ctx *gin.Context) {
 		Name:        request.Username,
 		DisplayName: request.DisplayName,
 	}
-	registrationOptions := func(credCreationOpts *protocol.PublicKeyCredentialCreationOptions) {
-		credCreationOpts.CredentialExcludeList = user.CredentialExcludeList()
-	}
-	options, sessionData, err := webauthn.WebAuthn.BeginRegistration(user, registrationOptions)
+	excludeCredentialsOption := goWebAuthn.WithExclusions(user.CredentialExcludeList())
+	options, sessionData, err := webauthn.WebAuthn.BeginRegistration(user, excludeCredentialsOption)
 	if err != nil {
 		fmt.Println("begin registration failed, error: ", err.Error())
 		ctx.JSON(
