@@ -18,6 +18,16 @@ func GetUserByID(id string) (*User, error) {
 	return &u, err
 }
 
+// GetUserByName 透過 Name 取得使用者
+func GetUserByName(name string) (*User, error) {
+	Context.mu.Lock()
+	defer Context.mu.Unlock()
+
+	var u User
+	err := Context.db.Where("name = ?", name).First(&u).Error
+	return &u, err
+}
+
 // GetUserByChallenge 透過 Challenge 取得使用者
 func GetUserByChallenge(challenge string) (*User, error) {
 	Context.mu.Lock()
