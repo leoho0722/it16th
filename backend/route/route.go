@@ -12,6 +12,12 @@ import (
 func NewRoute() {
 	app := gin.Default()
 
+	wellknown := app.Group("/.well-known")
+	{
+		wellknown.GET("/apple-app-site-association", controller.AppleWellKnownHandler)
+		wellknown.GET("/assetlinks.json", controller.AndroidWellKnownHandler)
+	}
+
 	attestation := app.Group("/attestation")
 	{
 		attestation.POST("/options", controller.StartAttestationHandler)

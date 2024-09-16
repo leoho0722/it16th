@@ -1,0 +1,26 @@
+[
+    {
+      "relation" : [
+        "delegate_permission/common.handle_all_urls",
+        "delegate_permission/common.get_login_creds"
+      ],
+      "target" : {
+        "namespace" : "web",
+        "site" : "YOUR WEBAUTHN RP SERVER ORIGIN"
+      }
+    },
+    {
+      "relation" : [
+        "delegate_permission/common.handle_all_urls",
+        "delegate_permission/common.get_login_creds"
+      ],
+      "target" : {
+        "namespace" : "android_app",
+        "package_name" : "com.example.it16th.fido2.frontend",
+        "sha256_cert_fingerprints" : [
+           "<GENERATED SHA256 CERT FINGERPRINTS>"
+        ]
+      }
+    }
+  ]
+  
