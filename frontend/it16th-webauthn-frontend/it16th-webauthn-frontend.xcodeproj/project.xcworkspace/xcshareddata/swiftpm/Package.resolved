@@ -1,0 +1,15 @@
+{
+  "originHash" : "6ae8fb6a93bda5083b6a65ac65b32f9fbab1db35a56bd1a67f9e1c6e2c74d9a8",
+  "pins" : [
+    {
+      "identity" : "swifthelpers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leoho0722/SwiftHelpers.git",
+      "state" : {
+        "revision" : "d6c0c220f98742d6b7028b3e93c765a8f80a050b",
+        "version" : "0.1.0"
+      }
+    }
+  ],
+  "version" : 3
+}
