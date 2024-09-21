@@ -19,12 +19,22 @@ struct AssertionResultsRequest: Codable {
     
     struct AuthenticatorAssertionResponse: Codable {
         
-        var authenticatorData: String
+        var authenticatorData: String?
         
-        var signature: String
+        var signature: String?
         
-        var userHandle: String
+        var userHandle: String?
         
         var clientDataJSON: String
+    }
+    
+    init(id: String,
+         response: AuthenticatorAssertionResponse,
+         getClientExtensionResults: ClientExtensionResults,
+         type: PublicKeyCredential) {
+        self.id = id
+        self.response = response
+        self.getClientExtensionResults = getClientExtensionResults
+        self.type = type.rawValue
     }
 }

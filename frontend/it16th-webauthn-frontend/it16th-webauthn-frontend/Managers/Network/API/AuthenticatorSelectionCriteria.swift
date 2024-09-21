@@ -18,11 +18,11 @@ struct AuthenticatorSelectionCriteria: Codable {
     var userVerification: String
     
     init(authenticatorAttachment: AuthenticatorAttachment,
-         residentKey: String,
+         residentKey: ResidentKeyRequirement,
          requireResidentKey: Bool = false,
          userVerification: UserVerificationRequirement = .preferred) {
         self.authenticatorAttachment = authenticatorAttachment.rawValue
-        self.residentKey = residentKey
+        self.residentKey = residentKey.rawValue
         self.requireResidentKey = requireResidentKey
         self.userVerification = userVerification.rawValue
     }
@@ -33,6 +33,15 @@ enum AuthenticatorAttachment: String, Codable {
     case platform = "platform"
     
     case crossPlatform = "cross-platform"
+}
+
+enum ResidentKeyRequirement: String, Codable {
+    
+    case required = "required"
+    
+    case preferred = "preferred"
+    
+    case discouraged = "discouraged"
 }
 
 enum UserVerificationRequirement: String, Codable {

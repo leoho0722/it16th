@@ -21,6 +21,16 @@ struct AttestationResultsRequest: Codable {
         
         var clientDataJSON: String
         
-        var attestationObject: String
+        var attestationObject: String?
+    }
+    
+    init(id: String,
+         response: AuthenticatorAttestationResponse,
+         getClientExtensionResults: ClientExtensionResults,
+         type: PublicKeyCredential) {
+        self.id = id
+        self.response = response
+        self.getClientExtensionResults = getClientExtensionResults
+        self.type = type.rawValue
     }
 }

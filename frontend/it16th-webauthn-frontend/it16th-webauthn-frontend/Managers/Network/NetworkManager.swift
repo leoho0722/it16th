@@ -8,7 +8,7 @@
 import Foundation
 import SwiftHelpers
 
-class NetworkManager: NSObject {
+actor NetworkManager: NSObject {
 
     static let shared = NetworkManager()
     
@@ -20,18 +20,28 @@ class NetworkManager: NSObject {
         self.urlSession = URLSession(configuration: self.urlSessionConfiguration)
     }
     
-    func request<D>(with config: NetworkConfiguration) async throws -> Response<D> where D: Decodable {
+    func request<D>(with config: RequestConfiguration) async throws -> D where D: Decodable {
         let request = try buildURLRequest(config: config)
         let (data, response) = try await urlSession.data(for: request)
         guard let httpResponse = (response as? HTTPURLResponse) else {
             throw URLError(.badServerResponse)
         }
-        let decodedResponse: D = try decodeResponse(data: data)
-        return Response(statusCode: httpResponse.statusCode, body: decodedResponse)
+        switch HTTP.StatusCode(rawValue: httpResponse.statusCode) {
+        case .badRequest:
+            throw NetworkError.badRequest(data)
+        case .internalServerError:
+            throw NetworkError.internalServerError(data)
+        case .ok:
+            let decodedResponse: D = try decodeResponse(data: data)
+            return decodedResponse
+        default:
+            let decodedResponse: D = try decodeResponse(data: data)
+            return decodedResponse
+        }
     }
     
-    private func buildURLRequest(config: NetworkConfiguration) throws -> URLRequest {
-        guard let url = URL(string: "\(config.scheme.rawValue)\(config.host)\(config.endpoint)") else {
+    private func buildURLRequest(config: RequestConfiguration) throws -> URLRequest {
+        guard let url = URL(string: "\(config.scheme.rawValue)\(config.host.rawValue)\(config.endpoint.rawValue)") else {
             throw URLError(.badURL)
         }
         var request = URLRequest(url: url)
@@ -40,7 +50,11 @@ class NetworkManager: NSObject {
         
         switch config.method {
         case .post:
-            request.httpBody = try JSON.toJsonData(data: config.body)
+            do {
+                request.httpBody = try JSON.toJsonData(data: config.body)
+            } catch {
+                throw NetworkError.jsonEncodeFailed(error)
+            }
         default:
             break
         }
@@ -49,7 +63,12 @@ class NetworkManager: NSObject {
     }
     
     private func decodeResponse<D>(data: Data) throws -> D where D: Decodable {
-        let decoder = JSONDecoder()
-        return try decoder.decode(D.self, from: data)
+        do {
+            let decoder = JSONDecoder()
+            let decodedResponse = try decoder.decode(D.self, from: data)
+            return decodedResponse
+        } catch {
+            throw NetworkError.jsonDecodeFailed(error)
+        }
     }
 }

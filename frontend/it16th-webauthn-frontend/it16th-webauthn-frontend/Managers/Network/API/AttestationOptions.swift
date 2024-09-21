@@ -16,6 +16,16 @@ struct AttestationOptionsRequest: Codable {
     var authenticatorSelection: AuthenticatorSelectionCriteria
     
     var attestation: String
+    
+    init(username: String,
+         displayName: String,
+         authenticatorSelection: AuthenticatorSelectionCriteria,
+         attestation: Attestation = .none) {
+        self.username = username
+        self.displayName = displayName
+        self.authenticatorSelection = authenticatorSelection
+        self.attestation = attestation.rawValue
+    }
 }
 
 struct AttestationOptionsResponse: Decodable {

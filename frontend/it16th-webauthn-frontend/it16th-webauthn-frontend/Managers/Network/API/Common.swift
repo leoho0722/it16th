@@ -13,10 +13,3 @@ struct CommonResponse: Decodable {
     
     let errorMessage: String
 }
-
-struct Response<D>: Decodable where D: Decodable {
-    
-    let statusCode: Int
-    
-    let body: D
-}
