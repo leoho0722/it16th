@@ -86,7 +86,7 @@ func (u *User) WebAuthnCredentials() []webauthn.Credential {
 }
 
 func (u *User) CredentialExcludeList() []protocol.CredentialDescriptor {
-	var credentialExcludeList []protocol.CredentialDescriptor
+	credentialExcludeList := []protocol.CredentialDescriptor{}
 	for _, credential := range u.WebAuthnCredentials() {
 		descriptor := credential.Descriptor()
 		credentialExcludeList = append(credentialExcludeList, descriptor)

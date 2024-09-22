@@ -42,8 +42,12 @@ func StartAttestationHandler(ctx *gin.Context) {
 		Name:        request.Username,
 		DisplayName: request.DisplayName,
 	}
-	excludeCredentialsOption := goWebAuthn.WithExclusions(user.CredentialExcludeList())
-	options, sessionData, err := webauthn.WebAuthn.BeginRegistration(user, excludeCredentialsOption)
+	registrationOptions := func(options *protocol.PublicKeyCredentialCreationOptions) {
+		options.CredentialExcludeList = user.CredentialExcludeList()
+		options.AuthenticatorSelection = request.AuthenticatorSelection
+		options.Attestation = protocol.ConveyancePreference(request.Attestation)
+	}
+	options, sessionData, err := webauthn.WebAuthn.BeginRegistration(user, registrationOptions)
 	if err != nil {
 		fmt.Println("begin registration failed, error: ", err.Error())
 		ctx.JSON(
@@ -73,6 +77,8 @@ func StartAttestationHandler(ctx *gin.Context) {
 	fmt.Println("create user success")
 
 	attestationSessionData = sessionData
+
+	fmt.Println("Response: ", utils.PrintJSON(options.Response))
 
 	ctx.JSON(
 		http.StatusOK,
@@ -104,6 +110,18 @@ func FinishAttestationHandler(ctx *gin.Context) {
 	reqBody := utils.PrintJSON(request)
 	fmt.Println("Request body: ", reqBody)
 
+	authenticatorAttestationObject, err := base64.RawURLEncoding.DecodeString(request.Response.AttestationObject)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "failed to decode attestationObject, error: " + err.Error(),
+			},
+		)
+		return
+	}
+
 	authenticatorClientDataJSON, err := base64.RawURLEncoding.DecodeString(request.Response.ClientDataJSON)
 	if err != nil {
 		ctx.JSON(
@@ -127,7 +145,33 @@ func FinishAttestationHandler(ctx *gin.Context) {
 		return
 	}
 	fmt.Println("Decode clientDataJSON success")
-	if challenge, ok := clientDataJSON["challenge"].(string); !ok || challenge != attestationSessionData.Challenge {
+
+	challenge, ok := clientDataJSON["challenge"].(string)
+	if !ok {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "challenge not found",
+			},
+		)
+		return
+	}
+
+	decodedChallenge, err := base64.RawURLEncoding.DecodeString(challenge)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "failed to decode challenge, error: " + err.Error(),
+			},
+		)
+		return
+	}
+	challenge = string(decodedChallenge)
+
+	if challenge != attestationSessionData.Challenge {
 		ctx.JSON(
 			http.StatusBadRequest,
 			api.CommonResponse{
@@ -160,12 +204,14 @@ func FinishAttestationHandler(ctx *gin.Context) {
 				ClientExtensionResults: request.GetClientExtensionResults,
 			},
 			AttestationResponse: protocol.AuthenticatorAttestationResponse{
-				AttestationObject: protocol.URLEncodedBase64(request.Response.AttestationObject),
+				AttestationObject: protocol.URLEncodedBase64(authenticatorAttestationObject),
 				AuthenticatorResponse: protocol.AuthenticatorResponse{
 					ClientDataJSON: authenticatorClientDataJSON,
 				},
 			},
 		}
+
+		fmt.Println("Parse credential creation response:", utils.PrintJSON(ccr))
 
 		pcc, err := ccr.Parse()
 		if err != nil {

@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>webcredentials:&lt;YOUR WEBAUTHN RP SERVER DOMAIN&gt;?mode=developer</string>
+		<string>webcredentials:fee8-211-20-7-115.ngrok-free.app?mode=developer</string>
 	</array>
 </dict>
 </plist>

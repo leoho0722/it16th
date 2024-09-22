@@ -140,7 +140,7 @@ class PasskeysViewController: UIViewController {
                 }
                 passkeysManager.registration(username: username, challenge: response.challenge, anchor: window)
             } catch {
-                var errorMessage: String
+                var errorMessage: Any
                 switch error {
                 case let networkError as NetworkError:
                     switch networkError {
@@ -149,10 +149,10 @@ class PasskeysViewController: UIViewController {
                         let decodedResponse = try! decoder.decode(CommonResponse.self, from: response)
                         errorMessage = decodedResponse.errorMessage
                     default:
-                        errorMessage = error.localizedDescription
+                        errorMessage = error
                     }
                 default:
-                    errorMessage = error.localizedDescription
+                    errorMessage = error
                 }
                 Alert.showWith(title: "錯誤",
                                message: "WebAuthn 產生註冊資訊失敗！\n錯誤訊息為：\(errorMessage)",
@@ -167,13 +167,13 @@ class PasskeysViewController: UIViewController {
                                             credentialID: Data) {
         Task {
             do {
-                let base64URLEncodedClientDataJSON = clientDataJSON.base64EncodedString().base64EncodedToBase64RawURLEncoded()
-                let base64URLEncodedAttestationObject = attestationObject?.base64EncodedString().base64EncodedToBase64RawURLEncoded()
-                let base64URLEncodedCredentialID = credentialID.base64EncodedString().base64EncodedToBase64URLEncoded()
+                let base64RawURLEncodedClientDataJSON = clientDataJSON.base64EncodedString().base64EncodedToBase64RawURLEncoded()
+                let base64RawURLEncodedAttestationObject = attestationObject?.base64EncodedString().base64EncodedToBase64RawURLEncoded()
+                let base64RawURLEncodedCredentialID = credentialID.base64EncodedString().base64EncodedToBase64RawURLEncoded()
                 
-                let authenticatorAttestationResponse = AttestationResultsRequest.AuthenticatorAttestationResponse(clientDataJSON: base64URLEncodedClientDataJSON,
-                                                                                                                  attestationObject: base64URLEncodedAttestationObject)
-                let request = AttestationResultsRequest(id: base64URLEncodedCredentialID,
+                let authenticatorAttestationResponse = AttestationResultsRequest.AuthenticatorAttestationResponse(clientDataJSON: base64RawURLEncodedClientDataJSON,
+                                                                                                                  attestationObject: base64RawURLEncodedAttestationObject)
+                let request = AttestationResultsRequest(id: base64RawURLEncodedCredentialID,
                                                         response: authenticatorAttestationResponse,
                                                         getClientExtensionResults: .init(),
                                                         type: .publicKey)
@@ -370,6 +370,6 @@ extension PasskeysViewController: @preconcurrency PasskeysAuthentication {
 
 // MARK: - Previews
 
-#Preview {
-    PasskeysViewController()
-}
+//#Preview {
+//    PasskeysViewController()
+//}

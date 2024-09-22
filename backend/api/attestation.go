@@ -3,10 +3,10 @@ package api
 import "github.com/go-webauthn/webauthn/protocol"
 
 type CredentialCreationOptionsRequest struct {
-	Username               string                 `json:"username"`
-	DisplayName            string                 `json:"displayName"`
-	AuthenticatorSelection map[string]interface{} `json:"authenticatorSelection"`
-	Attestation            string                 `json:"attestation"`
+	Username               string                          `json:"username"`
+	DisplayName            string                          `json:"displayName"`
+	AuthenticatorSelection protocol.AuthenticatorSelection `json:"authenticatorSelection,omitempty"`
+	Attestation            string                          `json:"attestation"`
 }
 
 type CredentialCreationOptionsResponse struct {

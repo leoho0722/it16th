@@ -1,7 +1,7 @@
 {
     "webcredentials": {
         "apps": [
-            "<YOUR APPLE DEVELOPER TEAM ID>.com.example.it16th.fido2.frontend"
+            "S8FBP4YLUA.com.leoho.it16th-webauthn-frontend"
         ]
     }
 }

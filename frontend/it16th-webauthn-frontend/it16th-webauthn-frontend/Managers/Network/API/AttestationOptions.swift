@@ -44,7 +44,7 @@ struct AttestationOptionsResponse: Decodable {
     
     let timeout: Int
     
-    let excludeCredentials: [ExcludeCredential]
+    let excludeCredentials: [ExcludeCredential]?
     
     let authenticatorSelection: AuthenticatorSelectionCriteria
     

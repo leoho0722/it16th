@@ -48,18 +48,18 @@ extension RequestConfiguration {
     
     enum Host: String {
         
-        case rpServer = ""
+        case rpServer = "fee8-211-20-7-115.ngrok-free.app"
     }
     
     enum Endpoint: String {
         
         case beginRegistration = "/attestation/options"
         
-        case finishRegistration = "/attestation/results"
+        case finishRegistration = "/attestation/result"
         
         case beginAuthentication = "/assertion/options"
         
-        case finishAuthentication = "/assertion/results"
+        case finishAuthentication = "/assertion/result"
     }
     
     static func defaultHeaders() -> Dictionary<String, String> {
