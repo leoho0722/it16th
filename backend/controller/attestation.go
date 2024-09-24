@@ -76,6 +76,7 @@ func StartAttestationHandler(ctx *gin.Context) {
 	}
 	fmt.Println("create user success")
 
+	sessionData.Challenge = base64.RawStdEncoding.EncodeToString([]byte(sessionData.Challenge))
 	attestationSessionData = sessionData
 
 	fmt.Println("Response: ", utils.PrintJSON(options.Response))
@@ -158,19 +159,6 @@ func FinishAttestationHandler(ctx *gin.Context) {
 		return
 	}
 
-	decodedChallenge, err := base64.RawURLEncoding.DecodeString(challenge)
-	if err != nil {
-		ctx.JSON(
-			http.StatusBadRequest,
-			api.CommonResponse{
-				Status:       "failed",
-				ErrorMessage: "failed to decode challenge, error: " + err.Error(),
-			},
-		)
-		return
-	}
-	challenge = string(decodedChallenge)
-
 	if challenge != attestationSessionData.Challenge {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -181,6 +169,19 @@ func FinishAttestationHandler(ctx *gin.Context) {
 		)
 		return
 	} else {
+		decodedChallenge, err := base64.RawURLEncoding.DecodeString(challenge)
+		if err != nil {
+			ctx.JSON(
+				http.StatusBadRequest,
+				api.CommonResponse{
+					Status:       "failed",
+					ErrorMessage: "failed to decode challenge, error: " + err.Error(),
+				},
+			)
+			return
+		}
+		challenge = string(decodedChallenge)
+
 		foundUser, err := database.GetUserByChallenge(challenge)
 		if err != nil {
 			ctx.JSON(
@@ -271,7 +272,7 @@ func FinishAttestationHandler(ctx *gin.Context) {
 		ctx.JSON(
 			http.StatusOK,
 			api.CommonResponse{
-				Status:       "success",
+				Status:       "ok",
 				ErrorMessage: "",
 			},
 		)
