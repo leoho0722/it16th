@@ -48,7 +48,7 @@ extension RequestConfiguration {
     
     enum Host: String {
         
-        case rpServer = "fee8-211-20-7-115.ngrok-free.app"
+        case rpServer = "ab15-211-20-7-115.ngrok-free.app"
     }
     
     enum Endpoint: String {

@@ -32,7 +32,7 @@ func (*User) TableName() string {
 }
 
 func (u *User) WebAuthnID() []byte {
-	return []byte(u.ID)
+	return []byte(u.Name)
 }
 
 func (u *User) WebAuthnName() string {
@@ -81,6 +81,8 @@ func (u *User) WebAuthnCredentials() []webauthn.Credential {
 		}
 		credentials = append(credentials, cred)
 	}
+
+	// fmt.Println("WebAuthnCredentials: ", utils.PrintJSON(credentials))
 
 	return credentials
 }

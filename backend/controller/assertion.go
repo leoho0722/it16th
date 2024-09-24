@@ -49,7 +49,10 @@ func StartAssertionHandler(ctx *gin.Context) {
 	}
 	fmt.Println("get user by name success")
 
-	options, sessionData, err := webauthn.WebAuthn.BeginLogin(foundUser)
+	authenticationOptions := func(options *protocol.PublicKeyCredentialRequestOptions) {
+		options.UserVerification = protocol.UserVerificationRequirement(request.UserVerification)
+	}
+	options, sessionData, err := webauthn.WebAuthn.BeginLogin(foundUser, authenticationOptions)
 	if err != nil {
 		ctx.JSON(
 			http.StatusInternalServerError,
@@ -62,6 +65,7 @@ func StartAssertionHandler(ctx *gin.Context) {
 	}
 	fmt.Println("begin login success")
 
+	sessionData.Challenge = base64.RawStdEncoding.EncodeToString([]byte(sessionData.Challenge))
 	assertionSessionData = sessionData
 
 	err = database.UpdateUser(
@@ -81,11 +85,13 @@ func StartAssertionHandler(ctx *gin.Context) {
 	}
 	fmt.Println("update user success")
 
+	fmt.Println("Response: ", utils.PrintJSON(options.Response))
+
 	ctx.JSON(
 		http.StatusOK,
 		api.CredentialGetOptionsResponse{
 			CommonResponse: api.CommonResponse{
-				Status:       "success",
+				Status:       "ok",
 				ErrorMessage: "",
 			},
 			PublicKeyCredentialRequestOptions: options.Response,
@@ -111,8 +117,48 @@ func FinishAssertionHandler(ctx *gin.Context) {
 	reqBody := utils.PrintJSON(request)
 	fmt.Println("Request body: ", reqBody)
 
-	var authenticatorClientDataJSON []byte
-	_, err := base64.RawURLEncoding.Decode(authenticatorClientDataJSON, request.Response.ClientDataJSON)
+	fmt.Println("AssertionSessionData: ", utils.PrintJSON(assertionSessionData))
+
+	authenticatorData, err := base64.RawURLEncoding.DecodeString(request.Response.AuthenticatorData)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "failed to decode authenticatorData, error: " + err.Error(),
+			},
+		)
+		return
+	}
+	fmt.Println("Decode authenticatorData success")
+
+	authenticatorSignature, err := base64.RawURLEncoding.DecodeString(request.Response.Signature)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "failed to decode signature, error: " + err.Error(),
+			},
+		)
+		return
+	}
+	fmt.Println("Decode signature success")
+
+	authenticatorUserHandle, err := base64.RawURLEncoding.DecodeString(request.Response.UserHandle)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "failed to decode userHandle, error: " + err.Error(),
+			},
+		)
+		return
+	}
+	fmt.Println("Decode userHandle success")
+
+	authenticatorClientDataJSON, err := base64.RawURLEncoding.DecodeString(request.Response.ClientDataJSON)
 	if err != nil {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -136,7 +182,19 @@ func FinishAssertionHandler(ctx *gin.Context) {
 	}
 	fmt.Println("Decode clientDataJSON success")
 
-	if challenge, ok := clientDataJSON["challenge"].(string); !ok || challenge != attestationSessionData.Challenge {
+	challenge, ok := clientDataJSON["challenge"].(string)
+	if !ok {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api.CommonResponse{
+				Status:       "failed",
+				ErrorMessage: "challenge not found",
+			},
+		)
+		return
+	}
+
+	if challenge != assertionSessionData.Challenge {
 		ctx.JSON(
 			http.StatusBadRequest,
 			api.CommonResponse{
@@ -146,6 +204,19 @@ func FinishAssertionHandler(ctx *gin.Context) {
 		)
 		return
 	} else {
+		decodedChallenge, err := base64.RawURLEncoding.DecodeString(challenge)
+		if err != nil {
+			ctx.JSON(
+				http.StatusBadRequest,
+				api.CommonResponse{
+					Status:       "failed",
+					ErrorMessage: "failed to decode challenge, error: " + err.Error(),
+				},
+			)
+			return
+		}
+		challenge = string(decodedChallenge)
+
 		foundUser, err := database.GetUserByChallenge(challenge)
 		if err != nil {
 			ctx.JSON(
@@ -159,16 +230,35 @@ func FinishAssertionHandler(ctx *gin.Context) {
 		}
 		fmt.Println("get user by challenge success")
 
+		credentialRawID, err := utils.DecodeToBase64StdEncoding(request.Id)
+		if err != nil {
+			ctx.JSON(
+				http.StatusBadRequest,
+				api.CommonResponse{
+					Status:       "failed",
+					ErrorMessage: "failed to encode credential raw id, error: " + err.Error(),
+				},
+			)
+			return
+		}
+
 		car := protocol.CredentialAssertionResponse{
 			PublicKeyCredential: protocol.PublicKeyCredential{
 				Credential: protocol.Credential{
 					ID:   request.Id,
 					Type: request.Type,
 				},
-				RawID:                  []byte(request.Id),
+				RawID:                  protocol.URLEncodedBase64(credentialRawID),
 				ClientExtensionResults: request.GetClientExtensionResults,
 			},
-			AssertionResponse: request.Response,
+			AssertionResponse: protocol.AuthenticatorAssertionResponse{
+				AuthenticatorResponse: protocol.AuthenticatorResponse{
+					ClientDataJSON: protocol.URLEncodedBase64(authenticatorClientDataJSON),
+				},
+				AuthenticatorData: protocol.URLEncodedBase64(authenticatorData),
+				Signature:         protocol.URLEncodedBase64(authenticatorSignature),
+				UserHandle:        protocol.URLEncodedBase64(authenticatorUserHandle),
+			},
 		}
 		pca, err := car.Parse()
 		if err != nil {
@@ -182,6 +272,8 @@ func FinishAssertionHandler(ctx *gin.Context) {
 			return
 		}
 		fmt.Println("parse assertion response success")
+
+		fmt.Println("ParsedAssertionData: ", utils.PrintJSON(pca))
 
 		credential, err := webauthn.WebAuthn.ValidateLogin(foundUser, *assertionSessionData, pca)
 		if err != nil {
@@ -202,7 +294,7 @@ func FinishAssertionHandler(ctx *gin.Context) {
 		ctx.JSON(
 			http.StatusOK,
 			api.CommonResponse{
-				Status:       "success",
+				Status:       "ok",
 				ErrorMessage: "",
 			},
 		)

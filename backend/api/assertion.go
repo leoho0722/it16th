@@ -13,8 +13,15 @@ type CredentialGetOptionsResponse struct {
 }
 
 type AuthenticatorAssertionResponseRequest struct {
-	Id                        string                                  `json:"id"`
-	Response                  protocol.AuthenticatorAssertionResponse `json:"response"`
-	GetClientExtensionResults map[string]interface{}                  `json:"getClientExtensionResults"`
-	Type                      string                                  `json:"type"`
+	Id                        string                         `json:"id"`
+	Response                  AuthenticatorAssertionResponse `json:"response"`
+	GetClientExtensionResults map[string]interface{}         `json:"getClientExtensionResults"`
+	Type                      string                         `json:"type"`
+}
+
+type AuthenticatorAssertionResponse struct {
+	ClientDataJSON    string `json:"clientDataJSON"`
+	AuthenticatorData string `json:"authenticatorData"`
+	Signature         string `json:"signature"`
+	UserHandle        string `json:"userHandle,omitempty"`
 }

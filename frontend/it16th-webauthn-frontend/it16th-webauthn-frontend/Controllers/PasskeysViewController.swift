@@ -108,6 +108,7 @@ class PasskeysViewController: UIViewController {
                            vc: self)
             return
         }
+        passkeysBeginAuthentication(username: username)
     }
     
     // MARK: - Functions
@@ -232,7 +233,7 @@ class PasskeysViewController: UIViewController {
                                                anchor: window,
                                                preferImmediatelyAvailableCredentials: true)
             } catch {
-                var errorMessage: String
+                var errorMessage: Any
                 switch error {
                 case let networkError as NetworkError:
                     switch networkError {
@@ -241,10 +242,10 @@ class PasskeysViewController: UIViewController {
                         let decodedResponse = try! decoder.decode(CommonResponse.self, from: response)
                         errorMessage = decodedResponse.errorMessage
                     default:
-                        errorMessage = error.localizedDescription
+                        errorMessage = error
                     }
                 default:
-                    errorMessage = error.localizedDescription
+                    errorMessage = error
                 }
                 Alert.showWith(title: "錯誤",
                                message: "WebAuthn Authentication 產生登入資訊失敗！\n錯誤訊息為：\(errorMessage)",
@@ -291,7 +292,7 @@ class PasskeysViewController: UIViewController {
                                    vc: self)
                 }
             } catch {
-                var errorMessage: String
+                var errorMessage: Any
                 switch error {
                 case let networkError as NetworkError:
                     switch networkError {
@@ -300,10 +301,10 @@ class PasskeysViewController: UIViewController {
                         let decodedResponse = try! decoder.decode(CommonResponse.self, from: response)
                         errorMessage = decodedResponse.errorMessage
                     default:
-                        errorMessage = error.localizedDescription
+                        errorMessage = error
                     }
                 default:
-                    errorMessage = error.localizedDescription
+                    errorMessage = error
                 }
                 Alert.showWith(title: "錯誤",
                                message: "WebAuthn Authentication 驗證登入資訊失敗！\n錯誤訊息為：\(errorMessage)",

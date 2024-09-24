@@ -85,7 +85,7 @@ func StartAttestationHandler(ctx *gin.Context) {
 		http.StatusOK,
 		api.CredentialCreationOptionsResponse{
 			CommonResponse: api.CommonResponse{
-				Status:       "success",
+				Status:       "ok",
 				ErrorMessage: "",
 			},
 			PublicKeyCredentialCreationOptions: options.Response,
